@@ -18,6 +18,7 @@ import {
   getPluginSettings,
   SharedData,
   isBrowser,
+  raf,
 } from '@vue-devtools/shared-utils'
 import debounce from 'lodash/debounce'
 import { hook } from './global-hook'
@@ -159,7 +160,7 @@ async function connect () {
           for (let i = 0; i < 2 && i < parentInstances.length; i++) {
             const parentId = await getComponentId(app, parentUid, parentInstances[i], ctx)
             if (isSubscribed(BridgeSubscriptions.COMPONENT_TREE, sub => sub.payload.instanceId === parentId)) {
-              requestAnimationFrame(() => {
+              raf(() => {
                 sendComponentTreeData(appRecord, parentId, appRecord.componentFilter, null, ctx)
               })
             }
@@ -185,7 +186,7 @@ async function connect () {
         if (parentInstances.length) {
           const parentId = await getComponentId(app, parentUid, parentInstances[0], ctx)
           if (isSubscribed(BridgeSubscriptions.COMPONENT_TREE, sub => sub.payload.instanceId === parentId)) {
-            requestAnimationFrame(async () => {
+            raf(async () => {
               try {
                 sendComponentTreeData(await getAppRecord(app, ctx), parentId, appRecord.componentFilter, null, ctx)
               } catch (e) {
