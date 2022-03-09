@@ -51,6 +51,8 @@ export async function initBackend (bridge: Bridge) {
     persist: false,
   })
 
+  SharedData.isBrowser = isBrowser
+
   initOnPageConfig()
 
   if (!connected) {
