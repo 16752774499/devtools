@@ -1,6 +1,6 @@
 import { setStorage, getStorage } from './storage'
 import { Bridge } from './bridge'
-import { isMac } from './env'
+import { isBrowser, isMac } from './env'
 
 // Initial state
 const internalSharedData = {
@@ -29,6 +29,7 @@ const internalSharedData = {
   pageConfig: {} as any,
   legacyApps: false,
   debugInfo: false,
+  isBrowser,
 }
 
 const persisted = [
