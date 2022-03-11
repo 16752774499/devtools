@@ -4,6 +4,7 @@ import {
   Plugin,
   BuiltinBackendFeature,
   AppRecord,
+  now,
 } from '@vue-devtools/app-backend-api'
 import {
   Bridge,
@@ -21,6 +22,7 @@ import {
   raf,
 } from '@vue-devtools/shared-utils'
 import debounce from 'lodash/debounce'
+import throttle from 'lodash/throttle'
 import { hook } from './global-hook'
 import { subscribe, unsubscribe, isSubscribed } from './util/subscriptions'
 import { highlight, unHighlight } from './highlighter'
@@ -33,6 +35,7 @@ import {
   getComponentId,
   editComponentState,
   getComponentInstance,
+  refreshComponentTreeSearch,
 } from './component'
 import { addQueuedPlugins, addPlugin, sendPluginList, addPreviouslyRegisteredPlugins } from './plugin'
 import { PluginDescriptor, SetupFunction, TimelineLayerOptions, TimelineEventOptions, CustomInspectorOptions, Hooks } from '@vue/devtools-api'
@@ -112,7 +115,7 @@ async function connect () {
 
   // Components
 
-  hook.on(HookEvents.COMPONENT_UPDATED, async (app, uid, parentUid, component) => {
+  hook.on(HookEvents.COMPONENT_UPDATED, throttle(async (app, uid, parentUid, component) => {
     try {
       let id: string
       let appRecord: AppRecord
@@ -138,7 +141,7 @@ async function connect () {
         console.error(e)
       }
     }
-  })
+  }, 1000 / 10))
 
   hook.on(HookEvents.COMPONENT_ADDED, async (app, uid, parentUid, component) => {
     try {
@@ -171,6 +174,8 @@ async function connect () {
       if (ctx.currentInspectedComponentId === id) {
         sendSelectedComponentData(appRecord, id, ctx)
       }
+
+      await refreshComponentTreeSearch(ctx)
     } catch (e) {
       if (SharedData.debugInfo) {
         console.error(e)
@@ -204,6 +209,8 @@ async function connect () {
         sendEmptyComponentData(id, ctx)
       }
       appRecord.instanceMap.delete(id)
+
+      await refreshComponentTreeSearch(ctx)
     } catch (e) {
       if (SharedData.debugInfo) {
         console.error(e)
@@ -331,7 +338,7 @@ async function connect () {
   try {
     await addTimelineMarker({
       id: 'vue-devtools-init-backend',
-      time: Date.now(),
+      time: now(),
       label: 'Vue Devtools connected',
       color: 0x41B883,
       all: true,
